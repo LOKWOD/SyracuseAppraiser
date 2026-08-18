@@ -1,0 +1,23 @@
+name: One-time appraisal visitor sound test
+
+on:
+  push:
+    paths:
+      - .github/workflows/visitor-light-sound-test-20260817-1.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send SyracuseAppraiser visitor event
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKER='https://lokwod-visitor-beacon.syracuseappraiser.workers.dev'
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
+          status="$(curl --silent --show-error --max-time 30 --output /tmp/visitor-response --write-out '%{http_code}' --request POST "$WORKER/v1/hit" --user-agent "$UA" --header 'Origin: https://syracuseappraiser.com' --header 'Content-Type: text/plain;charset=UTF-8' --data-raw '{"site":"syracuse-appraiser","path":"/","title":"Syracuse Appraiser"}')"
+          test "$status" = '204' || { echo "Unexpected HTTP $status"; cat /tmp/visitor-response; exit 1; }
+          echo 'SyracuseAppraiser visitor event sent.'
